@@ -27,7 +27,7 @@ function handleRunTest(){
 async function runTest(){
  if(codeBlock != '' && selectedTests.length != 0){
   const minDuration = new Promise(r => setTimeout(r, 1000));
-   const req = await fetch(`http://localhost:5173/api/scan-code`,{
+   const req = await fetch(`/api/scan-code`,{
     method : 'POST',
     body : JSON.stringify({code : codeBlock, tests : selectedTests}),
     
