@@ -1,0 +1,11 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield shape -->
+  <path d="M60 10L20 30V60C20 85 60 110 60 110C60 110 100 85 100 60V30L60 10Z" fill="#1D4ED8" stroke="#1E40AF" stroke-width="2"/>
+  
+  <!-- Scan beam -->
+  <circle cx="60" cy="60" r="20" fill="#3B82F6" opacity="0.3"/>
+  <circle cx="60" cy="60" r="10" fill="#3B82F6"/>
+
+  <!-- Check mark in the center -->
+  <path d="M52 60L58 66L70 52" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
