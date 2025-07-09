@@ -34,7 +34,7 @@ onMount(()=>{
             <button class=" bg-white text-neutral-800 py-1.5 px-3.5 rounded-md border hover:border-neutral-600" onclick={()=>handleResult(false)}>close</button>
         </div>
 
-        <div class="w-full max-w-3xl h-fit flex flex-col items-center gap-4">
+        <div class="w-full max-w-3xl h-fit flex flex-col items-center gap-4 ">
             {#if errors.length != 0}
                 <span>Problems found in the code!!!</span>
             {:else}

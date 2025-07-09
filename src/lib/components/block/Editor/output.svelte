@@ -33,7 +33,7 @@ import { highlightActiveLine } from '@codemirror/view';
     EditorView.theme({
       '&': {
         backgroundColor: '#fff',
-        color: '#d4d4d4',
+        color: '#262626',
         fontFamily: 'monospace',
         padding: '12px',
         fontSize: '14px',
@@ -54,21 +54,19 @@ import { highlightActiveLine } from '@codemirror/view';
   
  const getError = (errors)=> [
   lineNumbers(),
-  oneDark,
   javascript(),
   errorLinePlugin(errors),
-  oneDark,
-  highlightSpecialChars(),
-  highlightSpecialChars(),
+
   
   EditorView.theme({
       '.cm-error-line': {
         backgroundColor: '#e7000b',
-        color : "text-red-300",
+        color : "#fff",
         borderLeft: '3px solid #ff4d4f',
       },
       '.cm-activeLine': {
-      backgroundColor: '#2a2d2e', // subtle VSCode-like glow
+      backgroundColor: 'red', // subtle VSCode-like glow
+      color : '#000'
     }
     })
  ]
