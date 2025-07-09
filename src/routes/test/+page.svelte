@@ -2,12 +2,15 @@
 import abtesting from '$lib/asset/ab-testing.mp4'
 import Footer from '$lib/components/block/footer.svelte';
 import Result from "$lib/components/block/result.svelte";
+import { javascript } from '@codemirror/lang-javascript';
+import CodeMirror from 'svelte-codemirror-editor'
+
 
 let codeBlock = $state('')
 let selectedTests = $state([])
 let showTestModal = $state(false)
 let result = $state([])
-let showResult = $state(false)
+let showResult = $state(true)
 let tests = [
     {id : 1, title : 'API Endpoints', desc : 'search insecure or exposed private routes'}, {id : 2, title : 'API Keys', desc:"check for API keys that should not be public"}, {id : 3, title : 'CORS', desc : 'check for Cross Origin Requests'}, {id : 4, title : 'Fetch Request', desc:'check for insecure fetch requests'}
 ]
@@ -46,7 +49,7 @@ async function runTest(){
 <div class="relative w-full h-fit px-4 pb-7">
     <div class="relative w-full h-fit flex flex-col items-center">
       {#if showResult}
-        <Result {result} {handleResult}/>
+        <Result {result} {handleResult} {codeBlock}/>
       {/if}
         <div class={`sticky z-30 top-0 left-0 bg-slate-100 w-full h-screen backdrop-blur-xs ${showTestModal ? 'block':'hidden'}`}>
             <div class="relative w-full h-full flex items-center justify-center">
@@ -67,7 +70,9 @@ async function runTest(){
             <h2 class="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0 py-1" contenteditable="true">
                 Project 1
             </h2>
-            <textarea class="w-full h-64 max-w-xl border border-neutral-400 rounded-md p-2 bg-white" placeholder="paste your code here" bind:value={codeBlock}></textarea>
+            <div class="w-full  h-max border-2 border-neutral-400 rounded-md p-2">
+              <CodeMirror bind:value={codeBlock} lang={javascript()} placeholder='//write your code here'  class="w-full h-36 overflow-auto codeEditor" styles={{"&": {width: "100%",maxWidth: "100%",height: "100%",},}}/>              
+            </div>
             <div class="w-full h-1 flex">
                 {#if codeBlock.length != 0}
                     <button onclick={()=>codeBlock = ''}>clear</button>
@@ -200,6 +205,10 @@ async function runTest(){
       transform: scale(0.9);
     }
   }
+  .codeEditor::-webkit-scrollbar{
+    width: 2px;
+  }
+
 </style>
 
 

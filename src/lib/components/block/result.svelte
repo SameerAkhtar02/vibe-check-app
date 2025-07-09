@@ -6,37 +6,45 @@ import ErrorOneBlock from "./errorOneBlock.svelte";
 import ErrorThreeBlock from "./errorThreeBlock.svelte";
 import ErrorTwoBlock from "./errorTwoBlock.svelte";
 import ErrorFourBlock from "./errorFourBlock.svelte";
+import Output from "./Editor/output.svelte";
 
-let {result, handleResult} = $props()
 
-let errorFound = $state(false)
+let {result, handleResult, codeBlock} = $props()
+let errors = $state([])
 
 onMount(()=>{
-    result.forEach(ele=>{
-        if(ele.message == 'notOk'){
-            errorFound = true
-        }
+    errors = result.filter((n) => {
+        if(n.message == 'notOk'){
+        return n
+        } 
+    }).map(n=>{
+        let lines
+        lines = n.issues.map(t => t.line)
+        return {id:n.id,name:n.name,lines}
     })
+
+    console.log($state.snapshot(result),$state.snapshot(errors))
 })
 </script>
 
-<div class="sticky z-50 top-0 left-0 w-full h-screen bg-white">
-    <div class="relative w-full h-full flex flex-col items-center justify-start py-10 gap-4">
-        <button class="absolute top-4 left-4 bg-white text-neutral-800 py-1.5 px-3.5 rounded-md border hover:border-neutral-600" onclick={()=>handleResult(false)}>close</button>
-        <div class="w-fit h-fit grid place-items-center gap-2 mt-10 p-10 bg-white border-b">
-            {#if errorFound}
-                <span class="font-semibold text-lg">Error Found</span>
-            <!-- svelte-ignore a11y_media_has_caption -->
-            <video width="320" height="240" autoplay muted class="w-28 aspect-square">
-                <source src={Warning} type="video/mp4"/>
-            </video>
-            {:else}
-            <span class="font-semibold text-lg">Clean Code</span>
-            <video width="320" height="240" autoplay muted class="w-28 aspect-square">
-            <source src={Verified} type="video/mp4"/>
-            </video>
-            {/if}
+<div class="sticky z-50 top-0 left-0 w-full h-screen bg-white overflow-auto">
+    <div class="relative w-full h-full flex flex-col items-center justify-start py-4 gap-4">
+        
+        <div class="w-full h-12 flex items-center justify-start p-4">
+            <button class=" bg-white text-neutral-800 py-1.5 px-3.5 rounded-md border hover:border-neutral-600" onclick={()=>handleResult(false)}>close</button>
         </div>
+
+        <div class="w-full max-w-3xl h-fit flex flex-col items-center gap-4">
+            {#if errors.length != 0}
+                <span>Problems found in the code!!!</span>
+            {:else}
+                <span>You are all set!!</span>
+            {/if}
+           <div class="w-full max-w-3xl h-48 flex items-center justify-center border-2 border-neutral-300 rounded-md overflow-hidden p-0.5">
+                <Output value={codeBlock} {errors}/>
+            </div>
+        </div>
+
         <div class="w-full max-w-sm h-fit flex flex-col  lg:flex-row lg:max-w-max lg:justify-center lg:px-4 gap-4 divide-y mt-10 overflow-y-scroll lg:overflow-y-hidden overflow-x-clip lg:divide-x">
             {#each result as item, index}
                 <div class="w-sm h-fit lg:h-96 lg:overflow-y-scroll lg:w-md flex flex-col gap-1 ">                   
@@ -60,3 +68,7 @@ onMount(()=>{
         </div>
     </div>
 </div>
+
+<style>
+
+</style>
