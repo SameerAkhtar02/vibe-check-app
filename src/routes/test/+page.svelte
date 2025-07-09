@@ -10,7 +10,7 @@ let codeBlock = $state('')
 let selectedTests = $state([])
 let showTestModal = $state(false)
 let result = $state([])
-let showResult = $state(true)
+let showResult = $state(false)
 let tests = [
     {id : 1, title : 'API Endpoints', desc : 'search insecure or exposed private routes'}, {id : 2, title : 'API Keys', desc:"check for API keys that should not be public"}, {id : 3, title : 'CORS', desc : 'check for Cross Origin Requests'}, {id : 4, title : 'Fetch Request', desc:'check for insecure fetch requests'}
 ]
