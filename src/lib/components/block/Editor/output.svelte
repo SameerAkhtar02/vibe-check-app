@@ -8,17 +8,19 @@
 import { defaultHighlightStyle } from '@codemirror/highlight';
 import errorLinePlugin from '../../../../errorPlugin/errorPlugin'
 import { highlightActiveLine } from '@codemirror/view';
+import { Compartment } from '@codemirror/state';
 
-  import { onMount } from 'svelte';
+
+import { onMount } from 'svelte';
 
   let {value, errors} = $props()
 
   let editorDiv;
   let editorView;
-    let placeholder = '//write your code here'
-    let onChange = ()=>{}
+  let placeholder = '//write your code here'
+  const errorCompartment = new Compartment();
 
-   const baseExtensions = [
+  const baseExtensions = [
     lineNumbers(),
     javascript(),
     highlightActiveLine(),
@@ -27,7 +29,6 @@ import { highlightActiveLine } from '@codemirror/view';
       if (update.docChanged) {
         const newValue = update.state.doc.toString();
         value = newValue;
-        onChange(newValue);
       }
     }),
     EditorView.theme({
@@ -53,29 +54,26 @@ import { highlightActiveLine } from '@codemirror/view';
   ];
   
  const getError = (errors)=> [
-  lineNumbers(),
-  javascript(),
-  errorLinePlugin(errors),
-
-  
-  EditorView.theme({
-      '.cm-error-line': {
-        backgroundColor: '#e7000b',
-        color : "#fff",
-        borderLeft: '3px solid #ff4d4f',
-      },
-      '.cm-activeLine': {
-      backgroundColor: 'red', // subtle VSCode-like glow
-      color : '#000'
-    }
-    })
- ]
+    errorLinePlugin(errors),  
+    EditorView.theme({
+        '.cm-error-line': {
+          backgroundColor: '#e7000b',
+          color : "#fff",
+          borderLeft: '3px solid #ff4d4f',
+        },
+        '.cm-activeLine': {
+        backgroundColor: 'bg-blue-200', // subtle VSCode-like glow
+        color : '#000'
+      }
+      })
+  ]
 
 
    onMount(() => {
+    console.log($state.snapshot(errors))
     const state = EditorState.create({
       doc: value,
-      extensions: [baseExtensions,getError(errors)]
+      extensions: [...baseExtensions, errorCompartment.of(getError(errors ?? []))]
     });
 
     editorView = new EditorView({
@@ -88,6 +86,15 @@ import { highlightActiveLine } from '@codemirror/view';
       editorView.dom.setAttribute('placeholder', placeholder);
     }
   });
+
+  $effect(()=>{
+    if(editorView && errors){
+      console.log('hu')
+      editorView.dispatch({
+    effects: errorCompartment.reconfigure(getError(errors))
+  });
+    }
+  })
 </script>
 
 

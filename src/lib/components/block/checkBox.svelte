@@ -1,121 +1,40 @@
 <script>
-let {title, handleSelect} = $props()
-let bindVal = $state([])
+  let {data, handleSelectTest} = $props()
+
+  let selected = $state(false);
+  function toggle() {
+    selected = !selected;
+    handleSelectTest(data.id)
+  }
 </script>
 
-<div class="checkbox-wrapper-4">
-  <input class="inp-cbx" value={title} id={title} type="checkbox" bind:group={bindVal} onchange={()=>console.log(bindVal)}/>
-  <label class="cbx" for={title}><span>
-  <svg width="12px" height="10px">
-    <use xlink:href="#check-4"></use>
-  </svg></span><span>{title}</span></label>
-  <svg class="inline-svg">
-    <symbol id="check-4" viewbox="0 0 12 10">
-      <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
-    </symbol>
-  </svg>
-</div>
+<button
+  class={`flex items-start gap-3 p-4 rounded-sm cursor-pointer border transition-all duration-200 ${selected ? ' bg-[#f4a261]/80 border-[#f4a261]':'border-slate-300'}`}
+  onclick={toggle}
+>
+  <!-- Checkbox icon -->
+  <div
+    class={`flex items-center justify-center w-6 h-6 rounded border-2 transition-all duration-200 ${selected ? 'bg-slate-700' : 'bg-slate-50'}`}
+  >
+    {#if selected}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4 text-white transition-transform duration-200 scale-100"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M16.707 5.293a1 1 0 010 1.414l-7.778 7.778a1 1 0 01-1.414 0L3.293 10.95a1 1 0 111.414-1.414L8 12.828l7.293-7.293a1 1 0 011.414 0z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    {/if}
+  </div>
 
-<style>
-  .checkbox-wrapper-4 * {
-    box-sizing: border-box;
-  }
-  .checkbox-wrapper-4 .cbx {
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 6px;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    display: inline-block;
-  }
-  .checkbox-wrapper-4 .cbx:not(:last-child) {
-    margin-right: 6px;
-  }
-  .checkbox-wrapper-4 .cbx:hover {
-    background: rgba(0,119,255,0.06);
-  }
-  .checkbox-wrapper-4 .cbx span {
-    float: left;
-    vertical-align: middle;
-    transform: translate3d(0, 0, 0);
-  }
-  .checkbox-wrapper-4 .cbx span:first-child {
-    position: relative;
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    transform: scale(1);
-    border: 1px solid #cccfdb;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 1px rgba(0,16,75,0.05);
-  }
-  .checkbox-wrapper-4 .cbx span:first-child svg {
-    position: absolute;
-    top: 3px;
-    left: 2px;
-    fill: none;
-    stroke: #fff;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 16px;
-    stroke-dashoffset: 16px;
-    transition: all 0.3s ease;
-    transition-delay: 0.1s;
-    transform: translate3d(0, 0, 0);
-  }
-  .checkbox-wrapper-4 .cbx span:last-child {
-    padding-left: 8px;
-    line-height: 18px;
-  }
-  .checkbox-wrapper-4 .cbx:hover span:first-child {
-    border-color: #07f;
-  }
-  .checkbox-wrapper-4 .inp-cbx {
-    position: absolute;
-    visibility: hidden;
-  }
-  .checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child {
-    background: #07f;
-    border-color: #07f;
-    animation: wave-4 0.4s ease;
-  }
-  .checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child svg {
-    stroke-dashoffset: 0;
-  }
-  .checkbox-wrapper-4 .inline-svg {
-    position: absolute;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-    user-select: none;
-  }
-  @media screen and (max-width: 640px) {
-    .checkbox-wrapper-4 .cbx {
-      width: 100%;
-      display: inline-block;
-    }
-  }
-  @-moz-keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-  @-webkit-keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-  @-o-keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-  @keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-</style>
+  <!-- Text Content -->
+  <div>
+    <h4 class="text-sm text-start text-neutral-800 font-semibold">{data.title}</h4>
+    <p class="text-xs text-neutral-700 mt-1 leading-snug">{data.desc}</p>
+  </div>
+</button>

@@ -16,8 +16,8 @@ export default function errorLinePlugin(errors = []) {
       buildDecorations(view) {
         const builder = [];
         for (const error of errors) {
-          for (const lineNum of error.lines) {
-            const line = view.state.doc.line(lineNum);
+          for (const zeroBasedLineNum of error.lines) {
+            const line = view.state.doc.line(zeroBasedLineNum ); //ss
             builder.push(
               Decoration.line({
                 attributes: { class: 'cm-error-line' }

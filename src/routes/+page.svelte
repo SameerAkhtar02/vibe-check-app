@@ -56,7 +56,7 @@
         <h1 class="text-3xl md:text-5xl font-bold leading-9 md:leading-12 text-center">Discover The <br> Freedom Of VibeCoding</h1>
         <p class="w-full max-w-md text-base md:text-lg text-center">Stay ahead in your creative game by catching errors and security vulnerablitites in your code</p>
         <Button href="/test" class="w-fit h-fit py-1.5 px-3 rounded-md bg-neutral-900 text-white text-base hover:bg-neutral-800 hover:cursor-pointer">Try Now</Button>
-        <div class="relative w-fit py-16" in:scale={{ start: 0.8, duration: 500, delay:200 }}>
+        <div class="relative w-fit py-10" in:scale={{ start: 0.8, duration: 500, delay:200 }}>
            <Editor/>
            <Errordummy />
         </div>

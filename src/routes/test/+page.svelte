@@ -1,5 +1,6 @@
 <script>
 import abtesting from '$lib/asset/ab-testing.mp4'
+	import CheckBox from '$lib/components/block/checkBox.svelte';
 import Footer from '$lib/components/block/footer.svelte';
 import Result from "$lib/components/block/result.svelte";
 import { javascript } from '@codemirror/lang-javascript';
@@ -17,6 +18,16 @@ let tests = [
 
 function handleResult(val){
   showResult = val
+}
+function handleSelectTest(val){
+  if(selectedTests.includes(val)){
+    const test = selectedTests.filter( n => val != n)
+    selectedTests = test.sort()
+  } else{
+    selectedTests.push(val)
+    selectedTests = selectedTests.sort()
+  }
+  console.log($state.snapshot(selectedTests))
 }
 
 function handleRunTest(){
@@ -51,16 +62,16 @@ async function runTest(){
       {#if showResult}
         <Result {result} {handleResult} {codeBlock}/>
       {/if}
-        <div class={`sticky z-30 top-0 left-0 bg-slate-100 w-full h-screen backdrop-blur-xs ${showTestModal ? 'block':'hidden'}`}>
+        <div class={`fixed z-30 top-0 left-0 bg-white w-full h-screen backdrop-blur-sm ${showTestModal ? 'block':'hidden'}`}>
             <div class="relative w-full h-full flex items-center justify-center">
-                <div class="w-sm h-96 flex flex-col items-center justify-center gap-4 border rounded-md shadow-md bg-white">
-                    <div class="w-32 aspect-square bg-slate-300">
-                        <video width="320" height="240" autoplay muted class="w-28 aspect-square">
-                <source src={abtesting} type="video/mp4"/>
-            </video>
+                <div class="w-sm h-96 flex flex-col items-center justify-center gap-4 ">
+                    <div class="text-base text-neutral-800"> Hang on tight ! </div>
+                    <div class="w-32 aspect-square bg-transparent grid place-items-center-safe">
+                        <video width="320" height="240" autoplay muted loop class="w-28 aspect-square">
+                          <source src={abtesting} type="video/mp4"/>
+                        </video>
                     </div>
-                    <div class="text-base font-semibold">Running <span>{selectedTests.length}</span> tests</div>
-                    <div class="text-lg text-muted-foreground"> Hang on tight ! </div>
+                    <div class="text-lg font-semibold">Running <span>{selectedTests.length}</span> tests</div>
                 </div>
             </div>
         </div>
@@ -81,22 +92,11 @@ async function runTest(){
             </div>
         </div>
         <div class="w-full max-w-xl h-fit flex flex-col gap-4">
+          <h2 class="text-lg font-medium border-b">Select Tests:</h2>
             {#each tests as test}
-                <div class="w-full max-w-sm checkbox-wrapper-4 flex flex-col">
-                <input class="inp-cbx" value={test.id} id={test.title} type="checkbox" bind:group={selectedTests} onchange={()=>console.log(selectedTests)}/>
-                <label class="cbx" for={test.title}><span>
-                <svg width="12px" height="10px">
-                    <use xlink:href="#check-4"></use>
-                </svg></span><span class="font-semibold">{test.title}</span></label>
-                <svg class="inline-svg">
-                    <symbol id="check-4" viewbox="0 0 12 10">
-                    <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
-                    </symbol>
-                </svg>
-                    <span class="text-sm text-muted-foreground ml-9">{test.desc}</span>
-                </div>
+              <CheckBox data = {test} bind:value={selectedTests} {handleSelectTest}/>
             {/each}
-            <button class={`w-full h-fit py-2 rounded-md border font-semibold mt-4 ${selectedTests.length?'bg-orange-300':'border border-orange-400'}`} disabled={!selectedTests.length} onclick={handleRunTest}>Run Test</button>
+            <button class={`w-full h-fit py-2 rounded-md border font-semibold mt-4 ${selectedTests.length?'bg-orange-400':'border border-orange-400'}`} disabled={!selectedTests.length} onclick={handleRunTest}>Run Test</button>
         </div>
    </div>
 
