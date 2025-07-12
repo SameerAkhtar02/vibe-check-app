@@ -48,20 +48,22 @@
   </script>
 </svelte:head>
 
-<div class="relative w-full h-screen">
+<div class="relative w-full h-max lg:h-screen flex flex-col lg:flex-row bg-[#f5ebe0]/40">
 
-  <Checkered/>
-    <div class="absolute z-30 top-0 left-0 w-full h-full flex flex-col items-center gap-6 py-14 md:py-20 bg-transparent">
-      <div class="w-full h-full grid place-items-center gap-4 px-4">
-        <h1 class="text-3xl md:text-5xl font-bold leading-9 md:leading-12 text-center">Discover The <br> Freedom Of VibeCoding</h1>
-        <p class="w-full max-w-md text-base md:text-lg text-center">Stay ahead in your creative game by catching errors and security vulnerablitites in your code</p>
-        <Button href="/test" class="w-fit h-fit py-1.5 px-3 rounded-md bg-neutral-900 text-white text-base hover:bg-neutral-800 hover:cursor-pointer">Try Now</Button>
-        <div class="relative w-fit py-10" in:scale={{ start: 0.8, duration: 500, delay:200 }}>
-           <Editor/>
-           <Errordummy />
-        </div>
-      </div>
+  <div class="w-full lg:w-[50%] h-96 lg:h-full flex flex-col items-center justify-center lg:items-start px-4 lg:px-10 gap-3 lg:gap-7">
+
+    <h1 class="text-3xl md:text-4xl lg:text-5xl text-neutral-800 font-extrabold font-[Poppins] mt-10">Build Your Dream Apps With Ease</h1>
+    <p class="max-w-lg font-medium text-neutral-700">Now it's easier than ever to build and launch your dream app/website while we handle the security.</p>
+    <div class="w-fit h-fit flex flex-col lg:flex-row gap-3">
+      <button class="w-fit h-fit text-base font-medium bg-[#22223b] text-white border border-slate-100 shadow-md rounded-md px-5 py-1.5 duration-200 transition-colors">Try it</button>
+      <button class="w-fit h-fit text-base font-medium border border-slate-300 rounded-md px-4 py-1.5">Learn More</button>
     </div>
+
+  </div>
+  <div class="w-full h-96 lg:w-[49%] lg:h-full p-2">
+    <!-- a11y_img_redundant_alt -->
+    <img src={'https://images.pexels.com/photos/17485819/pexels-photo-17485819.png'} alt="hero-image" class="w-full h-full object-cover object-center rounded-md"/>
+  </div>
 
 </div>  
 
