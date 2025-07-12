@@ -9,21 +9,18 @@ import ErrorFourBlock from "./errorFourBlock.svelte";
 import Output from "./Editor/output.svelte";
 
 
+
 let {result, handleResult, codeBlock} = $props()
 let errors = $state([])
 
 onMount(()=>{
-    errors = result.filter((n) => {
-        if(n.message == 'notOk'){
-        return n
-        } 
-    }).map(n=>{
-        let lines
-        lines = n.issues.map(t => t.line)
-        return {id:n.id,name:n.name,lines}
+    errors = result.filter(n => {
+        if(n.message == 'notOk') return n
+    }).map((t,i)=>{
+        return t.issues
     })
-
-    console.log($state.snapshot(result),$state.snapshot(errors))
+    errors = errors.flatMap(innerArr => innerArr.sort((a,b)=>a.line-b.line)).sort((a,b)=>a.line-b.line)
+    console.log($state.snapshot(errors))
 })
 </script>
 
