@@ -6,7 +6,6 @@ import ErrorOneBlock from "./errorOneBlock.svelte";
 import ErrorThreeBlock from "./errorThreeBlock.svelte";
 import ErrorTwoBlock from "./errorTwoBlock.svelte";
 import ErrorFourBlock from "./errorFourBlock.svelte";
-import Output from "./Editor/output.svelte";
 
 let {result, handleResult, codeBlock, uploadedFiles} = $props()
 let errors = $state([])
@@ -86,78 +85,183 @@ function getCurrentFileResults() {
     const currentFile = fileResults[selectedFileIndex];
     return currentFile ? currentFile.results : [];
 }
+
+function getSortedFiles() {
+    if (!isMultiFileResult) {
+        // For single code, return a single "file" entry
+        return [{
+            fileName: 'Code Block',
+            hasErrors: errors.length > 0,
+            errorCount: errors.length
+        }];
+    }
+    
+    // Sort files: those with errors first, then alphabetically
+    return fileResults
+        .map((file, index) => ({
+            ...file,
+            index,
+            hasErrors: file.results.some(r => r.message === 'notOk'),
+            errorCount: file.results
+                .filter(r => r.message === 'notOk')
+                .reduce((count, r) => count + r.issues.length, 0)
+        }))
+        .sort((a, b) => {
+            // Files with errors first
+            if (a.hasErrors && !b.hasErrors) return -1;
+            if (!a.hasErrors && b.hasErrors) return 1;
+            // Then sort by error count (descending)
+            if (a.errorCount !== b.errorCount) return b.errorCount - a.errorCount;
+            // Finally alphabetically
+            return a.fileName.localeCompare(b.fileName);
+        });
+}
+
+function getErrorCountForFile(fileIndex) {
+    if (!isMultiFileResult) return errors.length;
+    
+    const file = fileResults[fileIndex];
+    if (!file) return 0;
+    
+    return file.results
+        .filter(r => r.message === 'notOk')
+        .reduce((count, r) => count + r.issues.length, 0);
+}
+
+function getGroupedErrorsForFile() {
+    const currentResults = getCurrentFileResults();
+    if (!currentResults) return [];
+    
+    // Group errors by ID (severity/priority)
+    const grouped = {};
+    const priorityOrder = [1, 2, 3, 4]; // API endpoints, CORS, Insecure fetch, Code injection
+    
+    currentResults.forEach(result => {
+        if (result.message === 'notOk' && result.issues.length > 0) {
+            if (!grouped[result.id]) {
+                grouped[result.id] = {
+                    id: result.id,
+                    name: result.name,
+                    issues: []
+                };
+            }
+            grouped[result.id].issues = grouped[result.id].issues.concat(result.issues);
+        }
+    });
+    
+    // Return in priority order
+    return priorityOrder
+        .filter(id => grouped[id])
+        .map(id => grouped[id]);
+}
 </script>
 
 <div class="sticky z-50 top-0 left-0 w-full h-screen bg-white overflow-auto">
-    <div class="relative w-full h-full flex flex-col items-center justify-start py-4 gap-4">
+    <div class="relative w-full h-full flex flex-col items-start justify-start py-4 gap-4">
         
         <div class="w-full h-12 flex items-center justify-start p-4">
-            <button class=" bg-white text-neutral-800 py-1.5 px-3.5 rounded-md border hover:border-neutral-600" onclick={()=>handleResult(false)}>close</button>
+            <button 
+                class="bg-white text-neutral-800 py-2 px-4 rounded-md border border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2" 
+                onclick={()=>handleResult(false)}
+                aria-label="Close results"
+            >
+                Close
+            </button>
         </div>
 
-        <div class="w-full max-w-3xl h-fit flex flex-col items-center gap-4 ">
-            {#if errors.length != 0}
-                <span>
-                    Problems found 
-                    {#if isMultiFileResult}
-                        in {fileResults.length} files!!!
-                    {:else}
-                        in the code!!!
-                    {/if}
-                </span>
-            {:else}
-                <span>You are all set!!</span>
-            {/if}
-
-            <!-- File Navigation for Multi-file Results -->
-            {#if isMultiFileResult && fileResults.length > 1}
-                <div class="w-full max-w-3xl flex gap-2 overflow-x-auto pb-2">
-                    {#each fileResults as fileResult, index}
-                        <button 
-                            class={`px-3 py-1 text-sm rounded-md whitespace-nowrap transition-colors ${
-                                selectedFileIndex === index 
-                                    ? 'bg-orange-400 text-white' 
-                                    : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-                            }`}
-                            onclick={() => selectFile(index)}
-                        >
-                            {fileResult.fileName.split('/').pop()}
-                            {#if fileResult.results.some(r => r.message === 'notOk')}
-                                <span class="ml-1 text-red-500">⚠</span>
+        <!-- Two Column Layout -->
+        <div class="w-full max-w-7xl h-full flex flex-col lg:flex-row gap-6 px-4 flex-1">
+            
+            <!-- Left Column - File List -->
+            <div class="w-full lg:w-1/3 flex flex-col gap-4">
+                <div class="flex flex-col gap-2">
+                    {#if errors.length != 0}
+                        <h2 class="text-lg font-semibold text-neutral-800">
+                            Problems found 
+                            {#if isMultiFileResult}
+                                in {fileResults.length} files
+                            {:else}
+                                in the code
                             {/if}
+                        </h2>
+                    {:else}
+                        <h2 class="text-lg font-semibold text-green-600">You are all set!</h2>
+                    {/if}
+                </div>
+
+                <!-- File List -->
+                <div class="flex flex-col gap-2 flex-1 overflow-y-auto">
+                    {#each getSortedFiles() as file, index}
+                        {@const isSelected = isMultiFileResult ? selectedFileIndex === file.index : true}
+                        {@const displayName = isMultiFileResult ? file.fileName.split('/').pop() : file.fileName}
+                        
+                        <button 
+                            class={`w-full p-3 rounded-lg border text-left transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                                isSelected 
+                                    ? 'bg-orange-50 border-orange-300 text-orange-900' 
+                                    : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300'
+                            }`}
+                            onclick={() => isMultiFileResult ? selectFile(file.index) : null}
+                        >
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-sm truncate">{displayName}</span>
+                                {#if file.errorCount > 0}
+                                    <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+                                        {file.errorCount}
+                                    </span>
+                                {:else}
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                                        ✓
+                                    </span>
+                                {/if}
+                            </div>
                         </button>
                     {/each}
                 </div>
-            {/if}
+            </div>
 
-           <div class="w-full max-w-3xl h-48 flex items-center justify-center border-2 border-neutral-300 rounded-md overflow-hidden p-0.5">
-                <Output value={getCurrentFileContent()} errors={getCurrentFileErrors()}/>
+            <!-- Right Column - Error Display -->
+            <div class="w-full lg:w-2/3 flex flex-col gap-4">
+                <h3 class="text-lg font-semibold text-neutral-800">
+                    {#if isMultiFileResult}
+                        Errors in {fileResults[selectedFileIndex]?.fileName?.split('/').pop() || 'Selected File'}
+                    {:else}
+                        Code Analysis Results
+                    {/if}
+                </h3>
+                
+                <div class="flex flex-col gap-4 flex-1 overflow-y-auto">
+                    {#each getGroupedErrorsForFile() as errorGroup}
+                        <div class="bg-white border border-neutral-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-semibold text-neutral-800">{errorGroup.name}</h4>
+                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+                                    {errorGroup.issues.length} issue{errorGroup.issues.length !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            
+                            {#if errorGroup.id == 1}
+                                <ErrorOneBlock issues={errorGroup.issues}/>
+                            {:else if errorGroup.id == 2}
+                                <ErrorTwoBlock issues={errorGroup.issues}/>
+                            {:else if errorGroup.id == 3}
+                                <ErrorThreeBlock issues={errorGroup.issues}/>
+                            {:else if errorGroup.id == 4}
+                                <ErrorFourBlock issues={errorGroup.issues}/>
+                            {/if}
+                        </div>
+                    {/each}
+                    
+                    {#if getGroupedErrorsForFile().length === 0}
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                            <div class="text-green-600 text-lg font-medium mb-2">No Issues Found</div>
+                            <div class="text-green-700 text-sm">This file passed all security checks!</div>
+                        </div>
+                    {/if}
+                </div>
             </div>
         </div>
 
-        <div class="w-full max-w-sm h-fit flex flex-col  lg:flex-row lg:max-w-max lg:justify-center lg:px-4 gap-4 divide-y mt-10 overflow-y-scroll lg:overflow-y-hidden overflow-x-clip lg:divide-x">
-            {#each getCurrentFileResults() as item, index}
-                <div class="w-sm h-fit lg:h-96 lg:overflow-y-scroll lg:w-md flex flex-col gap-1 ">                   
-                    <span class="font-semibold text-base">{item.name}</span>
-                    {#if isMultiFileResult}
-                        <span class="text-xs text-neutral-500">File: {fileResults[selectedFileIndex].fileName.split('/').pop()}</span>
-                    {/if}
-                    {#if item.message == 'ok'}
-                        <span>No error found</span>
-                    {:else}
-                        {#if item.id == 1}
-                            <ErrorOneBlock issues={item.issues}/>
-                        {:else if item.id == 2}
-                            <ErrorTwoBlock issues={item.issues}/>
-                        {:else if item.id == 3}
-                            <ErrorThreeBlock issues = {item.issues}/>
-                        {:else}
-                            <ErrorFourBlock issues={item.issues}/>
-                        {/if}
-                    {/if}
-                </div>
-            {/each}
-        </div>
     </div>
 </div>
 

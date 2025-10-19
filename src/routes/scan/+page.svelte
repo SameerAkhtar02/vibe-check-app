@@ -6,6 +6,7 @@ import Result from "$lib/components/block/result.svelte";
 import { javascript } from '@codemirror/lang-javascript';
 import CodeMirror from 'svelte-codemirror-editor'
 import { processUploadedFiles, formatFileSize, calculateTotalSize } from '$lib/utils/fileProcessor.js'
+import { toastService } from '$lib/utils/toastService.js'
 
 let codeBlock = $state('')
 let selectedTests = $state([])
@@ -36,15 +37,15 @@ function handleSelectTest(val){
 
 function handleRunTest(){
     if(inputMode === 'code' && !codeBlock.length) {
-        alert('code block cannot be empty!')
+        toastService.error('Code block cannot be empty!')
         return
     }
     if(inputMode === 'file' && uploadedFiles.length === 0) {
-        alert('Please upload files to scan!')
+        toastService.error('Please upload files to scan!')
         return
     }
     if(selectedTests.length === 0) {
-        alert('Please select at least one test!')
+        toastService.error('Please select at least one test!')
         return
     }
     showTestModal = true
@@ -74,8 +75,9 @@ async function runTest(){
         showResult = apiResult
         result = resp
         showTestModal = false
+        toastService.success('Scan completed successfully!')
     } else {
-        alert('Input cannot be empty')
+        toastService.error('Input cannot be empty')
     }
 }
 
@@ -90,9 +92,11 @@ async function handleFileUpload(event) {
         uploadedFiles = await processUploadedFiles(files);
         // Reset file input
         event.target.value = '';
+        toastService.success(`Successfully uploaded ${uploadedFiles.length} file(s)`)
     } catch (error) {
         fileError = error.message;
         uploadedFiles = [];
+        toastService.error(error.message);
     } finally {
         isProcessingFiles = false;
     }
@@ -113,20 +117,28 @@ function clearFiles() {
       {#if showResult}
         <Result {result} {handleResult} {codeBlock} {uploadedFiles}/>
       {/if}
-        <div class={`fixed z-30 top-0 left-0 bg-white w-full h-screen backdrop-blur-sm ${showTestModal ? 'block':'hidden'}`}>
+        <div 
+            class={`fixed z-30 top-0 left-0 bg-white/95 backdrop-blur-sm w-full h-screen ${showTestModal ? 'block':'hidden'}`}
+            role="dialog"
+            aria-labelledby="loading-title"
+            aria-modal="true"
+        >
             <div class="relative w-full h-full flex items-center justify-center">
-                <div class="w-sm h-96 flex flex-col items-center justify-center gap-4 ">
-                    <div class="text-base text-neutral-800"> Hang on tight ! </div>
+                <div class="w-sm h-96 flex flex-col items-center justify-center gap-4 bg-white rounded-lg shadow-lg p-8">
+                    <div class="text-base text-neutral-800" id="loading-title">Hang on tight!</div>
                     <div class="w-32 aspect-square bg-transparent grid place-items-center-safe">
-                        <video width="320" height="240" autoplay muted loop class="w-28 aspect-square">
+                        <video width="320" height="240" autoplay muted loop class="w-28 aspect-square" aria-hidden="true">
                           <source src={abtesting} type="video/mp4"/>
                         </video>
                     </div>
-                    <div class="text-lg font-semibold">
-                        Running <span>{selectedTests.length}</span> tests
+                    <div class="text-lg font-semibold text-center">
+                        Running <span class="text-orange-500">{selectedTests.length}</span> tests
                         {#if inputMode === 'file'}
-                            on <span>{uploadedFiles.length}</span> files
+                            on <span class="text-orange-500">{uploadedFiles.length}</span> files
                         {/if}
+                    </div>
+                    <div class="text-sm text-neutral-600 text-center">
+                        This may take a few moments...
                     </div>
                 </div>
             </div>
@@ -134,9 +146,23 @@ function clearFiles() {
 
 
         <div class="w-full max-w-xl h-fit flex flex-col gap-5 py-10">
-            <h2 class="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0 py-1" contenteditable="true">
-                Project 1
-            </h2>
+            <div class="flex items-center gap-2">
+                <h2 class="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0 py-1" id="project-title">
+                    Project 1
+                </h2>
+                <button 
+                    onclick={() => {
+                        const newName = prompt('Enter project name:', 'Project 1');
+                        if (newName) document.getElementById('project-title').textContent = newName;
+                    }}
+                    class="text-neutral-500 hover:text-orange-500 transition-colors"
+                    aria-label="Edit project name"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                </button>
+            </div>
             
             <!-- Input Mode Toggle -->
             <div class="w-full flex border border-neutral-300 rounded-md overflow-hidden">
@@ -165,12 +191,18 @@ function clearFiles() {
             <!-- Code Input Mode -->
             {#if inputMode === 'code'}
                 <div class="w-full h-max border-2 border-neutral-400 rounded-md p-2">
-                    <CodeMirror bind:value={codeBlock} lang={javascript()} placeholder='//write your code here'  class="w-full h-36 overflow-auto codeEditor" styles={{"&": {width: "100%",maxWidth: "100%",height: "100%",},}}/>              
+                    <CodeMirror bind:value={codeBlock} lang={javascript()} placeholder='//write your code here'  class="w-full min-h-48 md:h-36 overflow-auto codeEditor" styles={{"&": {width: "100%",maxWidth: "100%",height: "100%",},}}/>              
                 </div>
-                <div class="w-full h-1 flex">
+                <div class="w-full h-1 flex items-center">
                     {#if codeBlock.length != 0}
-                        <button onclick={()=>codeBlock = ''}>clear</button>
-                        <span class="ml-auto">lines : {codeBlock.split('\n').length}</span>
+                        <button 
+                            onclick={()=>codeBlock = ''}
+                            class="text-sm text-neutral-600 hover:text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded px-2 py-1"
+                            aria-label="Clear code editor"
+                        >
+                            Clear
+                        </button>
+                        <span class="ml-auto text-sm text-neutral-500">Lines: {codeBlock.split('\n').length}</span>
                     {/if}
                 </div>
             {/if}
@@ -186,6 +218,7 @@ function clearFiles() {
                         class="hidden"
                         onchange={handleFileUpload}
                         accept=".js,.jsx,.ts,.tsx,.svelte,.vue,.json,.html,.css,.scss,.sass,.less,.py,.java,.php,.rb,.go,.rs,.cpp,.c,.h,.hpp,.cs,.swift,.kt,.scala,.clj,.hs,.ml,.fs,.r,.m,.pl,.sh,.bash,.zsh,.yaml,.yml,.toml,.ini,.cfg,.conf,.xml,.sql,.md,.txt"
+                        aria-label="Upload code files or folders for scanning"
                     />
                     
                     {#if isProcessingFiles}
@@ -223,7 +256,8 @@ function clearFiles() {
                                         </div>
                                         <button 
                                             onclick={() => removeFile(index)}
-                                            class="ml-2 text-red-500 hover:text-red-700 text-sm"
+                                            class="ml-2 text-red-500 hover:text-red-700 text-sm p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                                            aria-label={`Remove file ${file.name}`}
                                         >
                                             ×
                                         </button>
@@ -257,111 +291,9 @@ function clearFiles() {
 
 
 <style>
-  .checkbox-wrapper-4 * {
-    box-sizing: border-box;
-  }
-  .checkbox-wrapper-4 .cbx {
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 6px;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    display: inline-block;
-  }
-  .checkbox-wrapper-4 .cbx:not(:last-child) {
-    margin-right: 6px;
-  }
-  .checkbox-wrapper-4 .cbx:hover {
-    background: rgba(0,119,255,0.06);
-  }
-  .checkbox-wrapper-4 .cbx span {
-    float: left;
-    vertical-align: middle;
-    transform: translate3d(0, 0, 0);
-  }
-  .checkbox-wrapper-4 .cbx span:first-child {
-    position: relative;
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    transform: scale(1);
-    border: 1px solid #cccfdb;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 1px rgba(0,16,75,0.05);
-  }
-  .checkbox-wrapper-4 .cbx span:first-child svg {
-    position: absolute;
-    top: 3px;
-    left: 2px;
-    fill: none;
-    stroke: #fff;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 16px;
-    stroke-dashoffset: 16px;
-    transition: all 0.3s ease;
-    transition-delay: 0.1s;
-    transform: translate3d(0, 0, 0);
-  }
-  .checkbox-wrapper-4 .cbx span:last-child {
-    padding-left: 8px;
-    line-height: 18px;
-  }
-  .checkbox-wrapper-4 .cbx:hover span:first-child {
-    border-color: #07f;
-  }
-  .checkbox-wrapper-4 .inp-cbx {
-    position: absolute;
-    visibility: hidden;
-  }
-  .checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child {
-    background: #07f;
-    border-color: #07f;
-    animation: wave-4 0.4s ease;
-  }
-  .checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child svg {
-    stroke-dashoffset: 0;
-  }
-  .checkbox-wrapper-4 .inline-svg {
-    position: absolute;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-    user-select: none;
-  }
-  @media screen and (max-width: 640px) {
-    .checkbox-wrapper-4 .cbx {
-      width: 100%;
-      display: inline-block;
-    }
-  }
-  @-moz-keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-  @-webkit-keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-  @-o-keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
-  @keyframes wave-4 {
-    50% {
-      transform: scale(0.9);
-    }
-  }
   .codeEditor::-webkit-scrollbar{
     width: 2px;
   }
-
 </style>
 
 
