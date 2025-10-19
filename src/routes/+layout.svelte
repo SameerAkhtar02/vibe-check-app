@@ -15,7 +15,7 @@
 </script>
 
 <Navbar/>
-<main role="main">
+<main>
 	{@render children()}
 </main>
 <Footer/>
